@@ -142,10 +142,34 @@ class_targets = [0,1,1]
 
 # print(softmax_outputs[[0,1,2], class_targets])
 
-print(np.mean(-np.log(softmax_outputs[range(len(softmax_outputs)), class_targets])))
+# print(np.mean(-np.log(softmax_outputs[range(len(softmax_outputs)), class_targets])))
 
         #for accuracy rather than loss
 predictions = np.argmax(softmax_outputs,axis=1)
-print(predictions)
+# print(predictions)
 accuracy = np.mean(predictions == class_targets)
-print(f"acc: {accuracy}")
+# print(f"acc: {accuracy}")
+
+#single sample simple error
+outputs = np.array([1, 2, 3])
+targets = np.array([1, 0, 0])
+
+error = targets - outputs
+
+# print(error)
+
+#multiple samples simple error
+outputs = np.array([[1, 2, 3],
+                    [2, 0, 2],
+                    [-1, 1, 1]])
+targets = np.array([[1, 0, 0],
+                    [0, 0, 1],
+                    [0, 1, 0]])
+index_targets = [0,2,1]
+one_hot_targets = np.zeros(np.shape(outputs))
+one_hot_targets[range(len(outputs)),index_targets] = 1
+print(one_hot_targets)
+
+error = one_hot_targets - outputs
+
+print(error)
