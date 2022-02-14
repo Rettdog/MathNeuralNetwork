@@ -314,7 +314,7 @@ class Bird(GameObject):
         if not self.isDead:
             self.velocity += gravity
             self.y += self.velocity
-            self.x -= 0.1
+            # self.x -= 0.1
 
 
 class Pipe(GameObject):
