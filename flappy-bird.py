@@ -3,36 +3,131 @@ import pygame
 import numpy as np
 import time
 
-pygame.init()
 
-size = width, height = 500, 600
+class FlappyBirdGame():
 
-isRunning = True
+    def __init__(self):
 
-black = 0, 0, 0
+        pygame.init()
 
-screen = pygame.display.set_mode(size)
+        self.size = self.width, self.height = 500, 600
 
-gravity = 0.2
-jumpVel = -7
+        self.isRunning = True
 
-jumpBuffer = 20
+        self.black = 0, 0, 0
 
-buffer = 0
+        self.screen = pygame.display.set_mode(self.size)
 
-pipeWidth = 100
-pipeGap = 200
+        self.gravity = 0.2
+        self.jumpVel = -7
 
-pipeBuffer = 150
-pipeTimer = pipeBuffer
-pipeSpeed = -2
+        self.jumpBuffer = 20
 
-minPipeHeight = 150
-maxPipeHeight = 450
+        self.buffer = 0
 
-score = 0
-scoreBuffer = 50
-scoreTimer = scoreBuffer
+        self.pipeWidth = 100
+        self.pipeGap = 200
+
+        self.pipeBuffer = 150
+        self.pipeTimer = self.pipeBuffer
+        self.pipeSpeed = -2
+
+        self.minPipeHeight = 150
+        self.maxPipeHeight = 450
+
+        self.score = 0
+        self.scoreBuffer = 50
+        self.scoreTimer = self.scoreBuffer
+
+    def play(self):
+        # Begin Program
+        bird = Bird(100, 100, 25)
+
+        pipes = []
+
+        pipes.append(Pipe(500, 300, self.pipeWidth,
+                     self.pipeSpeed, self.pipeGap, self.height))
+
+        # clock = pygame.time.Clock()
+
+        while(self.isRunning):
+
+            # clock.tick(60)
+
+            if self.buffer > 0:
+                self.buffer -= 1
+
+            if self.pipeTimer <= 0:
+                self.pipeTimer = self.pipeBuffer
+                pipes.append(Pipe(500, np.random.randint(
+                    self.minPipeHeight, self.maxPipeHeight), self.pipeWidth, self.pipeSpeed, self.pipeGap, self.height))
+
+            self.pipeTimer -= 1
+
+            # Check exit button
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.isRunning = False
+
+            # Update Positions
+
+            bird.update(self.gravity)
+
+            if bird.y > self.height-bird.radius:
+                bird.y = self.height-bird.radius
+                bird.velocity = 0
+            if bird.y < bird.radius:
+                bird.y = bird.radius
+                bird.velocity = 0
+
+            for pipe in pipes:
+                if pipe.update():
+                    pipes.remove(pipe)
+
+            # Check Collision with first pipe
+
+            if self.checkCollision(pipes[0], bird):
+                self.isRunning = False
+
+            # Increase Score
+
+            if self.scoreTimer <= 0:
+                self.scoreTimer = self.scoreBuffer
+                self.score += 1
+
+            self.scoreTimer -= 1
+
+            # Check key presses
+            keys = pygame.key.get_pressed()
+
+            if keys[pygame.K_x]:
+                self.isRunning = False
+
+            # jump
+            if keys[pygame.K_SPACE] and self.buffer == 0:
+                bird.velocity = self.jumpVel
+                self.buffer = self.jumpBuffer
+
+            # Draw screen
+
+            self.screen.fill(self.black)
+
+            for pipe in pipes:
+                pipe.draw(self.screen)
+
+            bird.draw(self.screen)
+
+            pygame.display.flip()
+
+            time.sleep(10 / 1000)
+
+        print(f"Final Score: {self.score}")
+        return self.score
+
+    def checkCollision(self, pipe, bird):
+        if pipe.x < bird.x + bird.radius and pipe.x + pipe.width > bird.x - bird.radius and (pipe.y - pipe.pipeGap/2 > bird.y - bird.radius or pipe.y + pipe.pipeGap/2 < bird.y + bird.radius):
+            return True
+        return False
 
 
 class GameObject():
@@ -60,24 +155,26 @@ class Bird(GameObject):
         pygame.draw.circle(screen, (255, 0, 0),
                            (self.x, self.y), self.radius)
 
-    def update(self):
+    def update(self, gravity):
         self.velocity += gravity
         self.y += self.velocity
 
 
 class Pipe(GameObject):
 
-    def __init__(self, p_x, p_y, p_width):
+    def __init__(self, p_x, p_y, p_width, p_speed, p_gap, p_screenHeight):
         self.x = p_x
         self.y = p_y
         self.width = p_width
-        self.velocity = pipeSpeed
+        self.velocity = p_speed
+        self.pipeGap = p_gap
+        self.screenHeight = p_screenHeight
 
     def draw(self, screen):
         pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(
-            self.x, 0, self.width, self.y-pipeGap/2))
+            self.x, 0, self.width, self.y-self.pipeGap/2))
         pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(
-            self.x, self.y+pipeGap/2, self.width, height-self.y-pipeGap/2))
+            self.x, self.y+self.pipeGap/2, self.width, self.screenHeight-self.y-self.pipeGap/2))
 
     def update(self):
         self.x += self.velocity
@@ -86,90 +183,5 @@ class Pipe(GameObject):
         return False
 
 
-def checkCollision(pipe, bird):
-    if pipe.x < bird.x + bird.radius and pipe.x + pipe.width > bird.x - bird.radius and (pipe.y - pipeGap/2 > bird.y - bird.radius or pipe.y + pipeGap/2 < bird.y + bird.radius):
-        return True
-    return False
-
-
-# Begin Program
-bird = Bird(100, 100, 25)
-
-pipes = []
-
-pipes.append(Pipe(500, 300, pipeWidth))
-
-# clock = pygame.time.Clock()
-
-while(isRunning):
-
-    # clock.tick(60)
-
-    if buffer > 0:
-        buffer -= 1
-
-    if pipeTimer <= 0:
-        pipeTimer = pipeBuffer
-        pipes.append(Pipe(500, np.random.randint(
-            minPipeHeight, maxPipeHeight), pipeWidth))
-
-    pipeTimer -= 1
-
-    # Check exit button
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            isRunning = False
-
-    # Update Positions
-
-    bird.update()
-
-    if bird.y > height-bird.radius:
-        bird.y = height-bird.radius
-        bird.velocity = 0
-    if bird.y < bird.radius:
-        bird.y = bird.radius
-        bird.velocity = 0
-
-    for pipe in pipes:
-        if pipe.update():
-            pipes.remove(pipe)
-
-    # Check Collision with first pipe
-
-    if checkCollision(pipes[0], bird):
-        isRunning = False
-
-    # Increase Score
-
-    if scoreTimer <= 0:
-        scoreTimer = scoreBuffer
-        score += 1
-
-    scoreTimer -= 1
-
-    # Check key presses
-    keys = pygame.key.get_pressed()
-
-    if keys[pygame.K_x]:
-        isRunning = False
-
-    # jump
-    if keys[pygame.K_SPACE] and buffer == 0:
-        bird.velocity = jumpVel
-        buffer = jumpBuffer
-
-    # Draw screen
-
-    screen.fill(black)
-
-    for pipe in pipes:
-        pipe.draw(screen)
-
-    bird.draw(screen)
-
-    pygame.display.flip()
-
-    time.sleep(10 / 1000)
-
-print(f"Final Score: {score}")
+game = FlappyBirdGame()
+score = game.play()

@@ -1,14 +1,14 @@
 import numpy as np
 import nnfs
 import matplotlib.pyplot as plt
-from nnfs.datasets import spiral_data, vertical_data  # See for code: https://gist.github.com/Sentdex/454cb20ec5acf0e76ee8ab8448e6266c
+# See for code: https://gist.github.com/Sentdex/454cb20ec5acf0e76ee8ab8448e6266c
+from nnfs.datasets import spiral_data, vertical_data
 
 nnfs.init()
 
 
 class Network:
     def __init__(self, num_inputs, num_layers, num_neurons, num_outputs):
-
 
         self.activation_relu = Activation_ReLU()
         self.activation_softmax = Activation_Softmax()
@@ -63,16 +63,18 @@ class Network:
 class Layer_Dense:
     def __init__(self, n_inputs, n_neurons):
         self.weights = 0.1*np.random.randn(n_inputs, n_neurons)
-        self.biases = np.zeros((1,n_neurons))
+        self.biases = np.zeros((1, n_neurons))
 
     def forward(self, inputs):
         self.output = np.dot(inputs, self.weights)+self.biases
         return self.output
 
+
 class Activation_ReLU:
     def forward(self, inputs):
-        self.output = np.maximum(0,inputs)
+        self.output = np.maximum(0, inputs)
         return self.output
+
 
 class Activation_Softmax:
     def forward(self, inputs):
@@ -82,11 +84,13 @@ class Activation_Softmax:
         self.output = probabilities
         return self.output
 
+
 class Loss:
     def calculate(self, output, y):
         sample_losses = self.forward(output, y)
         data_loss = np.mean(sample_losses)
         return data_loss
+
 
 class Loss_CategoricalCrossentropy(Loss):
     def forward(self, y_pred, y_true):
@@ -101,20 +105,23 @@ class Loss_CategoricalCrossentropy(Loss):
         negative_log_likelyhoods = -np.log(correct_confidences)
         return negative_log_likelyhoods
 
+
 class Loss_OffsetError(Loss):
     def calculate(self, output, y):
         sample_losses = self.forward(output, y)
         data_loss = sample_losses
         return data_loss
+
     def forward(self, inputs, targets):
         error = 0
         if len(targets.shape) == 1:
             one_hot_targets = np.zeros(np.shape(inputs))
-            one_hot_targets[range(len(inputs)),targets] = 1
+            one_hot_targets[range(len(inputs)), targets] = 1
             error = one_hot_targets - inputs
         elif len(targets.shape) == 2:
             error = targets - inputs
         return error
+
 
 def basic():
 
@@ -122,10 +129,10 @@ def basic():
     # plt.scatter(X[:,0], X[:,1])
     # plt.show()
 
-    dense1 = Layer_Dense(2,3)
+    dense1 = Layer_Dense(2, 3)
     activation1 = Activation_ReLU()
 
-    dense2 = Layer_Dense(3,3)
+    dense2 = Layer_Dense(3, 3)
     activation2 = Activation_Softmax()
 
     lowest_error = 999999
@@ -139,21 +146,25 @@ def basic():
 
     for gen in range(10000):
 
-
-
         # print(np.shape(dense1.weights))
-        dense1.weights += random_scalar*np.random.randn(np.shape(dense1.weights)[0], np.shape(dense1.weights)[1])
-        dense1.biases += random_scalar*np.random.randn(np.shape(dense1.biases)[0], np.shape(dense1.biases)[1])
-        dense2.weights += random_scalar*np.random.randn(np.shape(dense2.weights)[0], np.shape(dense2.weights)[1])
-        dense2.biases += random_scalar*np.random.randn(np.shape(dense2.biases)[0], np.shape(dense2.biases)[1])
+        dense1.weights += random_scalar * \
+            np.random.randn(np.shape(dense1.weights)[
+                            0], np.shape(dense1.weights)[1])
+        dense1.biases += random_scalar * \
+            np.random.randn(np.shape(dense1.biases)[
+                            0], np.shape(dense1.biases)[1])
+        dense2.weights += random_scalar * \
+            np.random.randn(np.shape(dense2.weights)[
+                            0], np.shape(dense2.weights)[1])
+        dense2.biases += random_scalar * \
+            np.random.randn(np.shape(dense2.biases)[
+                            0], np.shape(dense2.biases)[1])
 
         dense1.forward(X)
         activation1.forward(dense1.output)
 
         dense2.forward(activation1.output)
         activation2.forward(dense2.output)
-
-
 
         loss_function = Loss_CategoricalCrossentropy()
         loss = loss_function.calculate(activation2.output, y)
@@ -188,7 +199,6 @@ def basic():
             dense2.weights = bestWeights2.copy()
             dense2.biases = bestBiases2.copy()
 
-
     dense1.weights = bestWeights1.copy()
     dense1.biases = bestBiases1.copy()
     dense2.weights = bestWeights2.copy()
@@ -211,7 +221,8 @@ def basic():
         if choosen_values[i] == y[i]:
             total_correct += 1
 
-    print(f"Final Accuracy: {total_correct/total_samples*100} Final Loss: {loss}")
+    print(
+        f"Final Accuracy: {total_correct/total_samples*100} Final Loss: {loss}")
 
     input("End")
 
@@ -236,13 +247,17 @@ def newtrain(p_samples, p_classes, p_layers, p_neurons, p_gens, p_random_scalar)
 
     for i in range(p_gens):
 
-        if (i/p_gens*100)%5 == 0:
+        if (i/p_gens*100) % 5 == 0:
             print("")
             print(f"Progress: {i/p_gens*100}%")
 
         for layer in network.layers:
-            layer.weights += random_scalar*np.random.randn(np.shape(layer.weights)[0], np.shape(layer.weights)[1])
-            layer.biases += random_scalar*np.random.randn(np.shape(layer.biases)[0], np.shape(layer.biases)[1])
+            layer.weights += random_scalar * \
+                np.random.randn(np.shape(layer.weights)[
+                                0], np.shape(layer.weights)[1])
+            layer.biases += random_scalar * \
+                np.random.randn(np.shape(layer.biases)[
+                                0], np.shape(layer.biases)[1])
 
         output = network.forward(X)
 
@@ -276,12 +291,15 @@ def newtrain(p_samples, p_classes, p_layers, p_neurons, p_gens, p_random_scalar)
 
     # print(classifications)
 
-    plt.scatter(X[:, 0], X[:,1], c=classifications,cmap="brg")
+    plt.scatter(X[:, 0], X[:, 1], c=classifications, cmap="brg")
     plt.title("Predicted Classifications")
     plt.show()
 
-    plt.scatter(X[:, 0], X[:,1], c=y,cmap="brg")
+    plt.scatter(X[:, 0], X[:, 1], c=y, cmap="brg")
     plt.title("Actual Classifications")
     plt.show()
 
-newtrain(100,3,4,32,100000, 0.25)
+# def flappyTrain()
+
+
+newtrain(100, 3, 4, 32, 100000, 0.25)
