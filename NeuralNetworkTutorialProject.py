@@ -312,19 +312,20 @@ def newtrain(p_samples, p_classes, p_layers, p_neurons, p_gens, p_random_scalar)
 def flappyTrain(genSize, threshold, epochs):
 
     random_scalar_weights = 0.01
-    random_scalar_biases = 0.0001
+    random_scalar_biases = 0
 
     # inputs: distance to next pipe, upper distance to pipe, lower distance to pipe
     networks = []
 
     for i in range(genSize):
-        networks.append(Network(3, 4, 4, 2, 0.1))
+        networks.append(Network(3, 5, 4, 2, 0.01))
 
     game = flappybird.FlappyBirdGame()
 
     for i in range(epochs):
 
         outcomes = game.botPlay(networks, True, True)
+
         # for network in networks:
         #     outcome = game.botPlay(network, False, False)
         #     outcomes = np.append(outcomes, [outcome])
@@ -341,18 +342,22 @@ def flappyTrain(genSize, threshold, epochs):
             print(
                 f"Final: {genSize} networks after {epochs} generations\nMin Score: {minScore}\nMax Score: {maxScore}\nAverage Score: {averageScore}\n")
 
+        # print(f"all: {outcomes}")
+
         bestOutcomes = np.array([])
         for j in range(int(genSize*(threshold/100))):
             # outcomes[[np.argmax(outcomes)][0]] = -1
             bestOutcomes = np.append(bestOutcomes, [np.argmax(outcomes)][0])
             outcomes[[np.argmax(outcomes)][0]] = -1
 
-        # print(bestOutcomes)
+        # print(f"minus best: {outcomes}")
 
         bestNetworks = []
-        for j, network in zip(range(len(networks)), networks):
+        for j in range(len(networks)):
             if j in bestOutcomes:
-                bestNetworks.append(network)
+                bestNetworks.append(networks[j])
+
+        # print(f"best: {bestOutcomes}")
 
         numEach = (genSize-len(bestNetworks))//len(bestNetworks)+1
         numSum = genSize - (numEach)*len(bestNetworks)
@@ -364,7 +369,7 @@ def flappyTrain(genSize, threshold, epochs):
             newNetworks.extend(bestNetworks)
         newNetworks.extend(bestNetworks[:numSum])
 
-        print(f"New Length: {len(newNetworks)}")
+        # print(f"New Length: {len(newNetworks)}")
 
         for network in newNetworks[threshold:]:
             for layer in network.layers:
@@ -377,8 +382,8 @@ def flappyTrain(genSize, threshold, epochs):
                                     0], np.shape(layer.biases)[1])
                 # print(layer.weights[0])
 
-        networks = newNetworks
+        networks = newNetworks.copy()
 
 
 # newtrain(100, 3, 4, 32, 100000, 0.25)
-flappyTrain(100, 50, 10)
+flappyTrain(100, 5, 10)

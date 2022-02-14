@@ -166,18 +166,18 @@ class FlappyBirdGame():
                 if not birds[i].isDead:
                     birds[i].update(self.gravity)
 
-                    if birds[i].y > self.height-birds[i].radius:
+                    if birds[i].y >= self.height-birds[i].radius:
                         # print(birds[i].y)
-                        birds[i].y = self.height-birds[i].radius
-                        birds[i].velocity = 0
+                        # birds[i].y = self.height-birds[i].radius
+                        # birds[i].velocity = 0
                         # self.isRunning = False
                         birds[i].isDead = True
                         birdsAlive -= 1
                         # print(birdsAlive)
                         break
-                    if birds[i].y < birds[i].radius:
-                        birds[i].y = birds[i].radius
-                        birds[i].velocity = 0
+                    if birds[i].y <= birds[i].radius:
+                        # birds[i].y = birds[i].radius
+                        # birds[i].velocity = 0
                         # self.isRunning = False
                         birds[i].isDead = True
                         birdsAlive -= 1
@@ -314,6 +314,7 @@ class Bird(GameObject):
         if not self.isDead:
             self.velocity += gravity
             self.y += self.velocity
+            self.x -= 0.1
 
 
 class Pipe(GameObject):
