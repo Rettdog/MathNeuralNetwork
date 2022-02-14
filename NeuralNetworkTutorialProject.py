@@ -3,12 +3,15 @@ import nnfs
 import matplotlib.pyplot as plt
 # See for code: https://gist.github.com/Sentdex/454cb20ec5acf0e76ee8ab8448e6266c
 from nnfs.datasets import spiral_data, vertical_data
+import flappybird
+import math
+# from network import Network
 
-nnfs.init()
+# nnfs.init()
 
 
 class Network:
-    def __init__(self, num_inputs, num_layers, num_neurons, num_outputs):
+    def __init__(self, num_inputs, num_layers, num_neurons, num_outputs, randomness):
 
         self.activation_relu = Activation_ReLU()
         self.activation_softmax = Activation_Softmax()
@@ -19,25 +22,29 @@ class Network:
 
         if num_layers == 1:
 
-            self.layers.append(Layer_Dense(num_inputs, num_outputs))
+            self.layers.append(Layer_Dense(
+                num_inputs, num_outputs, randomness))
         else:
             for i in range(num_layers):
                 if i == 0:
-                    print(f"adding: {(num_inputs, num_neurons)}")
-                    self.layers.append(Layer_Dense(num_inputs, num_neurons))
+                    # print(f"adding: {(num_inputs, num_neurons)}")
+                    self.layers.append(Layer_Dense(
+                        num_inputs, num_neurons, randomness))
                 elif i == num_layers-1:
-                    print(f"adding: {(num_neurons, num_outputs)}")
-                    self.layers.append(Layer_Dense(num_neurons, num_outputs))
+                    # print(f"adding: {(num_neurons, num_outputs)}")
+                    self.layers.append(Layer_Dense(
+                        num_neurons, num_outputs, randomness))
                 else:
-                    print(f"adding: {(num_neurons, num_neurons)}")
-                    self.layers.append(Layer_Dense(num_neurons, num_neurons))
+                    # print(f"adding: {(num_neurons, num_neurons)}")
+                    self.layers.append(Layer_Dense(
+                        num_neurons, num_neurons, randomness))
 
     def forward(self, inputs):
-
         values = inputs
         for layer in self.layers:
             values = layer.forward(values)
             values = self.activation_relu.forward(values)
+        # self.outputs = values
         self.outputs = self.activation_softmax.forward(values)
         return self.outputs
 
@@ -61,8 +68,9 @@ class Network:
 
 
 class Layer_Dense:
-    def __init__(self, n_inputs, n_neurons):
-        self.weights = 0.1*np.random.randn(n_inputs, n_neurons)
+    def __init__(self, n_inputs, n_neurons, randomness):
+        self.weights = randomness*np.random.randn(n_inputs, n_neurons)
+        # self.weights =
         self.biases = np.zeros((1, n_neurons))
 
     def forward(self, inputs):
@@ -79,6 +87,7 @@ class Activation_ReLU:
 class Activation_Softmax:
     def forward(self, inputs):
         # print(inputs)
+        # print(np.exp(inputs))
         exp_values = np.exp(inputs)-np.max(inputs, axis=1, keepdims=True)
         probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
         self.output = probabilities
@@ -129,10 +138,10 @@ def basic():
     # plt.scatter(X[:,0], X[:,1])
     # plt.show()
 
-    dense1 = Layer_Dense(2, 3)
+    dense1 = Layer_Dense(2, 3, 0.1)
     activation1 = Activation_ReLU()
 
-    dense2 = Layer_Dense(3, 3)
+    dense2 = Layer_Dense(3, 3, 0.1)
     activation2 = Activation_Softmax()
 
     lowest_error = 999999
@@ -231,7 +240,7 @@ def newtrain(p_samples, p_classes, p_layers, p_neurons, p_gens, p_random_scalar)
 
     X, y = spiral_data(samples=p_samples, classes=p_classes)
 
-    network = Network(2, p_layers, p_neurons, p_classes)
+    network = Network(2, p_layers, p_neurons, p_classes, 0.1)
 
     lowest_error = 999999
     highest_accuracy = 0
@@ -299,7 +308,77 @@ def newtrain(p_samples, p_classes, p_layers, p_neurons, p_gens, p_random_scalar)
     plt.title("Actual Classifications")
     plt.show()
 
-# def flappyTrain()
+
+def flappyTrain(genSize, threshold, epochs):
+
+    random_scalar_weights = 0.01
+    random_scalar_biases = 0.0001
+
+    # inputs: distance to next pipe, upper distance to pipe, lower distance to pipe
+    networks = []
+
+    for i in range(genSize):
+        networks.append(Network(3, 4, 4, 2, 0.1))
+
+    game = flappybird.FlappyBirdGame()
+
+    for i in range(epochs):
+
+        outcomes = game.botPlay(networks, True, True)
+        # for network in networks:
+        #     outcome = game.botPlay(network, False, False)
+        #     outcomes = np.append(outcomes, [outcome])
+
+        minScore = np.min(outcomes)
+        maxScore = np.max(outcomes)
+        averageScore = np.average(outcomes)
+
+        if i % 1 == 0:
+            print(
+                f"Gen {i}: \nMin Score: {minScore}\nMax Score: {maxScore}\nAverage Score: {averageScore}\n")
+
+        if i == (epochs-1):
+            print(
+                f"Final: {genSize} networks after {epochs} generations\nMin Score: {minScore}\nMax Score: {maxScore}\nAverage Score: {averageScore}\n")
+
+        bestOutcomes = np.array([])
+        for j in range(int(genSize*(threshold/100))):
+            # outcomes[[np.argmax(outcomes)][0]] = -1
+            bestOutcomes = np.append(bestOutcomes, [np.argmax(outcomes)][0])
+            outcomes[[np.argmax(outcomes)][0]] = -1
+
+        # print(bestOutcomes)
+
+        bestNetworks = []
+        for j, network in zip(range(len(networks)), networks):
+            if j in bestOutcomes:
+                bestNetworks.append(network)
+
+        numEach = (genSize-len(bestNetworks))//len(bestNetworks)+1
+        numSum = genSize - (numEach)*len(bestNetworks)
+
+        # print(f"Gensize: {genSize} \nbestNetworks: {len(bestNetworks)} \n{numEach}*{len(bestNetworks)}+{numSum}")
+
+        newNetworks = []
+        for j in range(numEach):
+            newNetworks.extend(bestNetworks)
+        newNetworks.extend(bestNetworks[:numSum])
+
+        print(f"New Length: {len(newNetworks)}")
+
+        for network in newNetworks[threshold:]:
+            for layer in network.layers:
+                # print(layer.weights[0])
+                layer.weights += random_scalar_weights * \
+                    np.random.randn(np.shape(layer.weights)[
+                                    0], np.shape(layer.weights)[1])
+                layer.biases += random_scalar_biases * \
+                    np.random.randn(np.shape(layer.biases)[
+                                    0], np.shape(layer.biases)[1])
+                # print(layer.weights[0])
+
+        networks = newNetworks
 
 
-newtrain(100, 3, 4, 32, 100000, 0.25)
+# newtrain(100, 3, 4, 32, 100000, 0.25)
+flappyTrain(100, 50, 10)
