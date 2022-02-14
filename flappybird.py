@@ -174,7 +174,7 @@ class FlappyBirdGame():
                         birds[i].isDead = True
                         birdsAlive -= 1
                         # print(birdsAlive)
-                        break
+
                     if birds[i].y <= birds[i].radius:
                         # birds[i].y = birds[i].radius
                         # birds[i].velocity = 0
@@ -182,7 +182,6 @@ class FlappyBirdGame():
                         birds[i].isDead = True
                         birdsAlive -= 1
                         # print(birdsAlive)
-                        break
 
                     # Check Collision with first pipe
 
@@ -193,7 +192,6 @@ class FlappyBirdGame():
                             birds[i].isDead = True
                             birdsAlive -= 1
                             # print(birdsAlive)
-                            break
 
             for pipe in pipes:
                 if pipe.update():
@@ -243,12 +241,15 @@ class FlappyBirdGame():
             if shouldDraw:
 
                 self.screen.fill(self.black)
+                # pygame.draw.rect(self.screen, (0, 100, 0), pygame.Rect(
+                #     0, 0, self.width, 25))
 
                 for pipe in pipes:
                     pipe.draw(self.screen)
 
                 for i in range(len(networks)):
-                    birds[i].draw(self.screen)
+                    if not birds[i].isDead:
+                        birds[i].draw(self.screen)
 
                 # if len(birds) > 10:
                 #     pygame.draw.circle(

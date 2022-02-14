@@ -386,4 +386,4 @@ def flappyTrain(genSize, threshold, epochs):
 
 
 # newtrain(100, 3, 4, 32, 100000, 0.25)
-flappyTrain(100, 5, 10)
+flappyTrain(100, 20, 10)
