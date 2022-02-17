@@ -2,6 +2,7 @@ import sys
 import pygame
 import numpy as np
 import time
+
 # import NeuralNetworkTutorialProject as nntp
 # from NeuralNetworkTutorialProject import Network
 
@@ -126,12 +127,12 @@ class FlappyBirdGame():
         print(f"Final Score: {self.score}")
         return self.score
 
-    def botPlay(self, networks, shouldWait, shouldDraw):
+    def botPlay(self, networks, shouldWait, shouldDraw, cap=1000):
         self.pipeTimer = self.pipeBuffer
         self.scoreTimer = self.scoreBuffer
         birds = []
         for network in networks:
-            birds.append(Bird(100, self.height/2, 25-len(birds)/20))
+            birds.append(Bird(100, self.height/2, 25))
 
         pipes = []
 
@@ -203,7 +204,7 @@ class FlappyBirdGame():
                     if not birds[i].isDead:
                         self.scoreTimer = self.scoreBuffer
                         birds[i].score += 1
-                        if birds[i].score == 400:
+                        if birds[i].score == cap:
                             birds[i].isDead = True
                             birdsAlive -= 1
 
@@ -223,8 +224,13 @@ class FlappyBirdGame():
 
                     pipe = pipes[0]
                     # if len(pipes) >= 1:
-                    choice = networks[i].forward(np.array(
-                        [[pipe.x-birds[i].x-birds[i].radius, birds[i].y-pipe.y+self.pipeGap/2, pipe.y+self.pipeGap/2-birds[i].y]]))
+                    # print(type(networks[i][0]))
+                    if isinstance(networks[i], np.ndarray):
+                        choice = networks[i][0].forward(np.array(
+                            [[pipe.x-birds[i].x-birds[i].radius, birds[i].y-pipe.y+self.pipeGap/2, pipe.y+self.pipeGap/2-birds[i].y]]))
+                    else:
+                        choice = networks[i].forward(np.array(
+                            [[pipe.x-birds[i].x-birds[i].radius, birds[i].y-pipe.y+self.pipeGap/2, pipe.y+self.pipeGap/2-birds[i].y]]))
                 # else:
                 #     choice = network.forward(np.array([[pipes[0].x-bird.x-bird.radius, pipes[0].y,
                 #                                         pipes[0].x-bird.x-bird.radius+300, (self.minPipeHeight+self.maxPipeHeight)/2, bird.y, bird.velocity]]))
@@ -258,7 +264,7 @@ class FlappyBirdGame():
                 pygame.display.flip()
 
             if shouldWait:
-                time.sleep(5 / 1000)
+                time.sleep(10 / 1000)
 
         # print(f"Final Score: {self.score}")
         scores = []

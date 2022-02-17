@@ -67,6 +67,15 @@ class Network:
 
         return total_correct/total_samples*100
 
+    def copy(self):
+        # print(f"Old Id: {id(self)}")
+        output = Network(1, len(self.layers), 1, 1, 0)
+        output.layers = []
+        for i in range(len(self.layers)):
+            output.layers.append(self.layers[i].copy())
+        # print(f"New Id: {output}")
+        return output
+
 
 class Layer_Dense:
     def __init__(self, n_inputs, n_neurons, randomness):
@@ -78,6 +87,12 @@ class Layer_Dense:
     def forward(self, inputs):
         self.output = np.dot(inputs, self.weights)+self.biases
         return self.output
+
+    def copy(self):
+        output = Layer_Dense(1, 1, 0)
+        output.weights = self.weights
+        output.biases = self.biases
+        return output
 
 
 class Activation_ReLU:
@@ -140,7 +155,15 @@ class Loss_OffsetError(Loss):
         return error
 
 
-def flappyTrain(genSize, threshold, epochs):
+def copyNetworkArray(networks):
+    output = []
+    for i in range(len(networks)):
+        output.append(networks[i].copy())
+
+    return output
+
+
+def flappyTrain(genSize, threshold, epochs, shouldDraw, shouldSave, file='network.npy'):
 
     random_scalar_weights = .001
     scalar_step_weights = random_scalar_weights/epochs
@@ -160,7 +183,7 @@ def flappyTrain(genSize, threshold, epochs):
     for i in range(epochs):
 
         # outcomes = game.botPlay(networks, True,  True)
-        outcomes = game.botPlay(networks, True,  True)
+        outcomes = game.botPlay(networks, shouldDraw,  shouldDraw)
 
         # for network in networks:
         #     outcome = game.botPlay(network, False, False)
@@ -177,12 +200,12 @@ def flappyTrain(genSize, threshold, epochs):
         if i == (epochs-1):
             print(
                 f"Final: {genSize} networks after {epochs} generations\nMin Score: {minScore}\nMax Score: {maxScore}\nAverage Score: {averageScore}")
-
+            break
         # print(f"all: {outcomes}")
 
         bestAmount = int(genSize*(threshold/100))
 
-        print(f"Best Amount: {bestAmount}")
+        # print(f"Best Amount: {bestAmount}")
 
         # for j in range(bestAmount):
         #     # outcomes[[np.argmax(outcomes)][0]] = -1
@@ -208,7 +231,7 @@ def flappyTrain(genSize, threshold, epochs):
         #             bestIndices.append(k)
         #             outcomes[k] = -1
 
-        print(f"Outcomes Before: {outcomes}")
+        # print(f"Outcomes Before: {outcomes}")
 
         bestOutcomes = []
 
@@ -230,11 +253,13 @@ def flappyTrain(genSize, threshold, epochs):
 
         # print(bestOutcomes)
 
+        # put into one line vvvv
+
         bestNetworks = []
 
         for j in bestOutcomes:
             # print(f"Keeping: {j}")
-            bestNetworks.append(networks[j])
+            bestNetworks.append(networks[j].copy())
 
         # for j in range(len(networks)):
         #     if j in bestOutcomes:
@@ -250,10 +275,13 @@ def flappyTrain(genSize, threshold, epochs):
 
         newNetworks = []
         # print(f"Should be empty: {newNetworks}")
-        newNetworks.extend(bestNetworks)
+        newNetworks.extend(copyNetworkArray(bestNetworks))
         for j in range(numEach-1):
-            newNetworks.extend(bestNetworks)
-        newNetworks.extend(bestNetworks[:numSum])
+            newNetworks.extend(copyNetworkArray(bestNetworks))
+        newNetworks.extend(copyNetworkArray(bestNetworks[:numSum]))
+
+        # for j in range(len(newNetworks)):
+        #     print(id(newNetworks[j]))
 
         # print(f"Changed Length: {len(newNetworks[bestAmount:])}")
 
@@ -275,6 +303,8 @@ def flappyTrain(genSize, threshold, epochs):
 
                 # print(j, k)
 
+                # print(id(newNetworks[j].layers[k].weights))
+
                 # addToWeights = random_scalar_weights * \
                 #     np.zeros(np.shape(layer.weights))
 
@@ -283,9 +313,9 @@ def flappyTrain(genSize, threshold, epochs):
                 # layer.biases += random_scalar_biases * \
                 #     np.zeros(np.shape(layer.biases))
 
-                if(j == 7 and k == 0):
-                    print(
-                        f"Eighth Before: {newNetworks[j].layers[k].weights[0]}")
+                # if(j == 7 and k == 0):
+                #     print(
+                #         f"Eighth Before: {newNetworks[7].layers[0].weights[0]}")
 
                 # if(j == 9 and k == 0):
                 #     print(
@@ -304,9 +334,9 @@ def flappyTrain(genSize, threshold, epochs):
                     np.random.random(np.shape(newNetworks[j].layers[k].biases)) - \
                     random_scalar_biases
 
-                if(j == 7 and k == 0):
-                    print(
-                        f"Eighth After: {newNetworks[j].layers[k].weights[0]}")
+                # if(j == 7 and k == 0):
+                #     print(
+                #         f"Eighth After: {newNetworks[7].layers[0].weights[0]}")
 
                 # if(j == 9 and k == 0):
                 #     print(
@@ -319,14 +349,14 @@ def flappyTrain(genSize, threshold, epochs):
                 # print(f"Layer After: {newNetworks[j].layers[k].weights}")
                 # print(
                 #     f"Test Random: {2*random_scalar_weights*np.random.random((2,3))-random_scalar_weights}")
-            if(j == 7):
-                print(
-                    f"Eighth After After: {newNetworks[j].layers[0].weights[0]}")
+            # if(j == 7):
+            #     print(
+            #         f"Eighth After After: {newNetworks[7].layers[0].weights[0]}")
             # print(
             #     f"New During Mutation (Network: {netsChanged}) = {(game.botPlay(newNetworks, False,  False))}")
 
-        print(
-            f"Eighth After After After: {newNetworks[7].layers[0].weights[0]}")
+        # print(
+        #     f"Eighth After After After: {newNetworks[7].layers[0].weights[0]}")
         # print(layer.weights[0])
 
         # layer.weights = 0.01 * \
@@ -351,8 +381,8 @@ def flappyTrain(genSize, threshold, epochs):
         # print(
         #     f"New After Mutation = {game.botPlay(newNetworks, False,  False)}")
 
-        print("Check for equality")
-        print(f"Eighth: {newNetworks[7].layers[0].weights[0]}")
+        # print("Check for equality")
+        # print(f"Eighth: {newNetworks[7].layers[0].weights[0]}")
         # print(f"Tenth: {newNetworks[9].layers[0].weights[0]}")
         # print(f"Last: {newNetworks[-1].layers[0].weights[0]}")
 
@@ -364,6 +394,33 @@ def flappyTrain(genSize, threshold, epochs):
         # print(random_scalar_weights)
         print("\n")
 
+    if shouldSave:
 
-# newtrain(100, 3, 4, 32, 100000, 0.25)
-flappyTrain(25, 20, 5)
+        output = [networks[bestOutcomes[0]]]
+        # print(bestOutcomes[0])
+
+        # print(output)
+
+        with open(file, 'wb') as f:
+            np.save(f, output, allow_pickle=True)
+
+
+def runNetwork(file, maxScore, shouldDraw=True):
+
+    game = flappybird.FlappyBirdGame()
+
+    with open(file, 'rb') as f:
+        networks = [np.load(f, allow_pickle=True)]
+
+    # print(networks)
+
+    outcomes = game.botPlay(networks, shouldDraw, shouldDraw, cap=maxScore)
+
+    print(f"Final Score: {outcomes[0]}")
+
+
+fileName = 'test2.npy'
+
+# flappyTrain(50, 15, 5, False, True, file=fileName)
+
+runNetwork('test2.npy', 1000)
