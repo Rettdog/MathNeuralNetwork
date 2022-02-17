@@ -131,7 +131,7 @@ class FlappyBirdGame():
         self.scoreTimer = self.scoreBuffer
         birds = []
         for network in networks:
-            birds.append(Bird(100, self.height/2, 25))
+            birds.append(Bird(100, self.height/2, 25-len(birds)/20))
 
         pipes = []
 
