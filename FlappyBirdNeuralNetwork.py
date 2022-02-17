@@ -296,7 +296,7 @@ shouldDrawRun = True
 fileName = 'test2.npy'
 
 
-# flappyTrain(genSize, threshold, epochs, shouldDrawTrain,
-# shouldSave, cap = scoreCap, file = fileName)
+flappyTrain(genSize, threshold, epochs, shouldDrawTrain,
+            shouldSave, cap=scoreCap, file=fileName)
 
 runNetwork(fileName, maxScore, shouldDraw=shouldDrawRun)
